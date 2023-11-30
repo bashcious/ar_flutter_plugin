@@ -507,6 +507,35 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
                         promise(.success(false))
                     }
                     break
+                case 4: // Image
+                    // Add object to scene
+                    let img = FlutterArCoreImage(map: dict_node["data"] as! [String : Any])
+                    if let node: SCNNode = self.modelBuilder.makeNodeFromImage(name: dict_node["name"] as! String, imageData: img.data, transformation: dict_node["transformation"] as? Array<NSNumber>) {
+                        if let anchorName = dict_anchor?["name"] as? String, let anchorType = dict_anchor?["type"] as? Int {
+                            switch anchorType{
+                            case 0: //PlaneAnchor
+                                if let anchor = self.anchorCollection[anchorName]{
+                                    // Attach node to the top-level node of the specified anchor
+                                    self.sceneView.node(for: anchor)?.addChildNode(node)
+                                    promise(.success(true))
+                                } else {
+                                    promise(.success(false))
+                                }
+                            default:
+                                promise(.success(false))
+                            }
+                            
+                        } else {
+                            // Attach to top-level node of the scene
+                            self.sceneView.scene.rootNode.addChildNode(node)
+                            promise(.success(true))
+                        }
+                        promise(.success(false))
+                    } else {
+                        self.sessionManagerChannel.invokeMethod("onError", arguments: ["Unable to load renderable \(dict_node["uri"] as! String)"])
+                        promise(.success(false))
+                    }
+                    break
                 default:
                     promise(.success(false))
             }

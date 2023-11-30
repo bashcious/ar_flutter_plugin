@@ -143,6 +143,37 @@ class ArModelBuilder: NSObject {
             return nil
         }
     }
+  
+    // Creates a node from a given image in the Flutter
+    func makeNodeFromImage(name: String, imageData: Data, transformation: Array<NSNumber>?) -> SCNNode? {
+        
+        let node: SCNNode = SCNNode()
+      
+        // 创建一个 UIImage 对象从图像字节数据
+        guard let image = UIImage(data: imageData) else {
+            return nil
+        }
+        
+        // 创建一个平面几何体
+        let plane = SCNPlane(width: image.size.width / 1000.0, height: image.size.height / 1000.0) // 根据需要调整缩放比例
+        
+        // 将图像设置为平面几何体的纹理
+        plane.firstMaterial?.diffuse.contents = image
+        
+        // 创建一个节点并将平面几何体设置为节点的几何体
+        let imageNode = SCNNode(geometry: plane)
+        node.addChildNode(imageNode)
+        
+        // 设置节点的其他属性，例如位置、旋转等
+        node.name = name
+        if let transform = transformation {
+            node.transform = deserializeMatrix4(transform)
+        }
+      
+        node.eulerAngles.x = -.pi / 2
+        
+        return node
+    }
     
     // Creates a node form a given glb model path
     func makeNodeFromWebGlb(name: String, modelURL: String, transformation: Array<NSNumber>?) -> Future<SCNNode?, Never> {

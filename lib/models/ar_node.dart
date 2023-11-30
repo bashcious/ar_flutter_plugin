@@ -24,7 +24,10 @@ class ARNode {
   })  : name = name ?? UniqueKey().toString(),
         transformNotifier = ValueNotifier(createTransformMatrix(
             transformation, position, scale, rotation, eulerAngles)),
-        data = data ?? null;
+        data = data ?? null {
+    assert(type == NodeType.image && data != null,
+        "When using image types, the [data] must be used in the format {width: double, height: double, bytes: Uint8List}");
+  }
 
   /// Specifies the receiver's [NodeType]
   NodeType type;
