@@ -145,4 +145,9 @@ class ARObjectManager {
   removeNode(ARNode node) {
     _channel.invokeMethod<String>('removeNode', {'name': node.name});
   }
+
+  /// toggle plane renderer
+  togglePlaneRenderer() {
+    _channel.invokeMethod('togglePlaneRenderer');
+  }
 }

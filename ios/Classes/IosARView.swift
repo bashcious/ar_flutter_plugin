@@ -145,6 +145,12 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
                     result(nil)
                 }
                 break
+            case "togglePlaneRenderer":
+                showPlanes = false;
+                for plane in trackedPlanes.values {
+                    plane.1.removeFromParentNode()
+                }
+                break
             default:
                 result(FlutterMethodNotImplemented)
                 break
