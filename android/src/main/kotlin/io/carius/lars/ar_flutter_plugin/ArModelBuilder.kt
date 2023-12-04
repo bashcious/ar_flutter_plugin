@@ -1,7 +1,5 @@
 package io.carius.lars.ar_flutter_plugin
 
-import android.R
-import android.app.Activity
 import android.content.Context
 import com.google.ar.sceneform.Node
 import com.google.ar.sceneform.math.Vector3
@@ -10,20 +8,13 @@ import com.google.ar.sceneform.assets.RenderableSource
 
 import java.util.concurrent.CompletableFuture
 import android.net.Uri
-import android.view.Gravity
-import android.widget.Toast
+import android.util.Log
 import com.google.ar.core.*
-import com.google.ar.sceneform.ArSceneView
-import com.google.ar.sceneform.FrameTime
-import com.google.ar.sceneform.math.MathHelper
 import com.google.ar.sceneform.rendering.*
-import com.google.ar.sceneform.utilities.Preconditions
 import com.google.ar.sceneform.ux.*
 
 import io.carius.lars.ar_flutter_plugin.Serialization.*
 
-import io.flutter.FlutterInjector
-import io.flutter.embedding.engine.loader.FlutterLoader
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -119,6 +110,38 @@ class ArModelBuilder {
                 }
 
     return completableFutureNode
+    }
+
+    /// 绘制图片
+    fun makeNodeFromImg(
+        context: Context,
+        transformationSystem: TransformationSystem,
+        objectManagerChannel: MethodChannel,
+        enablePans: Boolean,
+        enableRotation: Boolean,
+        name: String,
+        renderable: Renderable,
+        transformation: ArrayList<Double>
+    ): CompletableFuture<CustomTransformableNode> {
+        val completableFutureNode: CompletableFuture<CustomTransformableNode> = CompletableFuture()
+
+        val imageNode = CustomTransformableNode(transformationSystem, objectManagerChannel, enablePans, enableRotation)
+
+        renderable.isShadowCaster = false;
+        imageNode.renderable = renderable
+        imageNode.name = name
+        val transform = deserializeMatrix4(transformation)
+
+        imageNode.worldScale = transform.first
+        imageNode.worldPosition = transform.second
+//        imageNode.worldRotation = transform.third
+
+        val upRotation = Quaternion.axisAngle(Vector3(1f, 0f, 0f), -90f)
+        imageNode.worldRotation = upRotation
+
+        completableFutureNode.complete(imageNode)
+
+        return completableFutureNode
     }
 
     // Creates a node form a given glb model path or URL. The gltf asset loading in Sceneform is asynchronous, so the function returns a compleatable future of type Node

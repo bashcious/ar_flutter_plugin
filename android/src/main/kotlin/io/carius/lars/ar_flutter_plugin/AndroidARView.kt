@@ -33,25 +33,16 @@ import java.io.IOException
 import java.nio.FloatBuffer
 import java.util.concurrent.CompletableFuture
 
-import android.R
 import com.google.ar.sceneform.rendering.*
 
 import android.view.ViewGroup
 
 import com.google.ar.core.TrackingState
-
-
-
-
-
-
-
-
-
-
-
-
-
+import io.carius.lars.ar_flutter_plugin.models.FlutterArCoreImage
+import android.widget.ImageView
+import android.widget.RelativeLayout
+import java.util.function.Consumer
+import android.graphics.BitmapFactory
 
 internal class AndroidARView(
         val activity: Activity,
@@ -789,6 +780,65 @@ internal class AndroidARView(
                                 completableFutureSuccess.completeExceptionally(throwable)
                                 null // return null because java expects void return (in java, void has no instance, whereas in Kotlin, this closure returns a Unit which has one instance)
                             }
+                }
+                4 -> {
+                    if (dict_node["data"] != null) {
+                        val flutterImage = FlutterArCoreImage(dict_node["data"] as HashMap<String, *>)
+                        val image = ImageView(viewContext)
+                        image.layoutParams = RelativeLayout.LayoutParams(
+                            RelativeLayout.LayoutParams.WRAP_CONTENT,
+                            RelativeLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        val bmp = BitmapFactory.decodeByteArray(flutterImage.bytes, 0, flutterImage.bytes.size)
+
+                        image.setImageBitmap(Bitmap.createScaledBitmap(bmp, bmp.width,
+                            bmp.height, false))
+
+                        ViewRenderable.builder().setView(viewContext, image)
+                            .build()
+                            .thenAccept(Consumer { renderable: ViewRenderable ->
+                                run {
+                                    modelBuilder.makeNodeFromImg(
+                                        viewContext,
+                                        transformationSystem,
+                                        objectManagerChannel,
+                                        enablePans,
+                                        enableRotation,
+                                        dict_node["name"] as String,
+                                        renderable,
+                                        dict_node["transformation"] as ArrayList<Double>
+                                    ).thenAccept{node ->
+                                        val anchorName: String? = dict_anchor?.get("name") as? String
+                                        val anchorType: Int? = dict_anchor?.get("type") as? Int
+                                        if (anchorName != null && anchorType != null) {
+                                            val anchorNode = arSceneView.scene.findByName(anchorName) as AnchorNode?
+                                            if (anchorNode != null) {
+                                                anchorNode.addChild(node)
+                                                completableFutureSuccess.complete(true)
+                                            } else {
+                                                completableFutureSuccess.complete(false)
+                                            }
+                                        } else {
+                                            arSceneView.scene.addChild(node)
+                                            completableFutureSuccess.complete(true)
+                                        }
+                                        completableFutureSuccess.complete(false)
+                                    }
+                                        .exceptionally { throwable ->
+                                            // Pass error to session manager (this has to be done on the main thread if this activity)
+                                            val mainHandler = Handler(viewContext.mainLooper)
+                                            val runnable = Runnable {sessionManagerChannel.invokeMethod("onError", listOf("Unable to load renderable" +  dict_node["uri"] as String)) }
+                                            mainHandler.post(runnable)
+                                            completableFutureSuccess.completeExceptionally(throwable)
+                                            null // return null because java expects void return (in java, void has no instance, whereas in Kotlin, this closure returns a Unit which has one instance)
+                                        }
+                                }
+                            })
+                            .exceptionally { throwable ->
+                                Log.e(TAG, "Unable to load image renderable.", throwable);
+                                return@exceptionally null
+                            }
+                    }
                 }
                 else -> {
                     completableFutureSuccess.complete(false)
