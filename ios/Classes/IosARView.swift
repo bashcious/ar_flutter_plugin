@@ -34,6 +34,9 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
     private var rotationVelocity: CGFloat?
     private var panningNode: SCNNode?
     private var panningNodeCurrentWorldLocation: SCNVector3?
+    
+    private var pinchNode: SCNNode?
+    private var pinchBeginScale: Float?
 
     init(
         frame: CGRect,
@@ -303,6 +306,12 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
                 panGestureRecognizer.delegate = self
                 self.sceneView.gestureRecognizers?.append(panGestureRecognizer)
             }
+        }
+        
+        if let configHandlePinch = arguments["handlePinch"] as? Bool {
+            let pinchGestureRecognizer = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
+            pinchGestureRecognizer.delegate = self
+            self.sceneView.gestureRecognizers?.append(pinchGestureRecognizer)
         }
         
         if let configHandleRotation = arguments["handleRotation"] as? Bool {
@@ -644,6 +653,45 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
             panCurrentLocation = nil
             self.objectManagerChannel.invokeMethod("onPanEnd", arguments: serializeLocalTransformation(node: panningNode))
             panningNode = nil
+        }
+    }
+    
+    @objc func handlePinch(_ gesture: UIPinchGestureRecognizer) {
+        guard let sceneView = gesture.view as? ARSCNView else { return }
+        
+        // 获取捏合手势的缩放因子
+        let scale = Float(gesture.scale)
+        
+        if gesture.state == .began {
+            pinchBeginScale = scale
+            let touchPoint = gesture.location(in: sceneView)
+            let allHitResults = sceneView.hitTest(touchPoint, options: [SCNHitTestOption.searchMode : SCNHitTestSearchMode.closest.rawValue])
+            // Because 3D model loading can lead to composed nodes, we have to traverse through a node's parent until the parent node with the name assigned by the Flutter API is found
+            let nodeHitResults: Array<String> = allHitResults.compactMap {
+                if let nearestNode = nearestParentWithNameStart(node: $0.node, characters: "[#") {
+                    pinchNode = nearestNode
+                    return nearestNode.name
+                }else{
+                    return nil
+                }
+            }
+        }
+        
+        if gesture.state == .changed {
+            if pinchNode != nil {
+                let nowScale = pinchNode?.parent?.scale ?? SCNVector3(0, 0, 0)
+                if pinchBeginScale == nil {
+                    pinchBeginScale = 0
+                }
+                let newScale = SCNVector3(nowScale.x + scale - pinchBeginScale! , nowScale.y - pinchBeginScale! + scale, nowScale.z - pinchBeginScale! + scale)
+                pinchBeginScale = scale
+                pinchNode?.parent?.scale = newScale
+            }
+        }
+        
+        if gesture.state == .ended {
+            pinchNode = nil
+            pinchBeginScale = nil
         }
     }
     

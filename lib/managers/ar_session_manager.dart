@@ -153,6 +153,7 @@ class ARSessionManager {
     bool showWorldOrigin = false,
     bool handleTaps = true,
     bool handlePans = false, // nodes are not draggable by default
+    bool handlePinch = false, // nodes are not scale by default
     bool handleRotation = false, // nodes can not be rotated by default
   }) {
     _channel.invokeMethod<void>('init', {
@@ -164,6 +165,7 @@ class ARSessionManager {
       'showWorldOrigin': showWorldOrigin,
       'handleTaps': handleTaps,
       'handlePans': handlePans,
+      'handlePinch': handlePinch,
       'handleRotation': handleRotation,
     });
   }
