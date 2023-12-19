@@ -11,6 +11,9 @@ typedef NodeTapResultHandler = void Function(List<String> nodes);
 typedef NodePanStartHandler = void Function(String node);
 typedef NodePanChangeHandler = void Function(String node);
 typedef NodePanEndHandler = void Function(String node, Matrix4 transform);
+typedef NodePinchStartHandler = void Function(String node);
+typedef NodePinchChangeHandler = void Function(String node);
+typedef NodePinchEndHandler = void Function(String node, Matrix4 transform);
 typedef NodeRotationStartHandler = void Function(String node);
 typedef NodeRotationChangeHandler = void Function(String node);
 typedef NodeRotationEndHandler = void Function(String node, Matrix4 transform);
@@ -28,6 +31,9 @@ class ARObjectManager {
   NodePanStartHandler? onPanStart;
   NodePanChangeHandler? onPanChange;
   NodePanEndHandler? onPanEnd;
+  NodePinchStartHandler? onPinchStart;
+  NodePinchChangeHandler? onPinchChange;
+  NodePinchEndHandler? onPinchEnd;
   NodeRotationStartHandler? onRotationStart;
   NodeRotationChangeHandler? onRotationChange;
   NodeRotationEndHandler? onRotationEnd;
@@ -79,6 +85,30 @@ class ARObjectManager {
 
             // Notify callback
             onPanEnd!(tappedNodeName, transform);
+          }
+          break;
+        case 'onPinchStart':
+          if (onPinchStart != null) {
+            final tappedNode = call.arguments as String;
+            // Notify callback
+            onPinchStart!(tappedNode);
+          }
+          break;
+        case 'onPinchChange':
+          if (onPinchChange != null) {
+            final tappedNode = call.arguments as String;
+            // Notify callback
+            onPinchChange!(tappedNode);
+          }
+          break;
+        case 'onPinchEnd':
+          if (onPinchEnd != null) {
+            final tappedNodeName = call.arguments["name"] as String;
+            final transform =
+            MatrixConverter().fromJson(call.arguments['transform'] as List);
+
+            // Notify callback
+            onPinchEnd!(tappedNodeName, transform);
           }
           break;
         case 'onRotationStart':

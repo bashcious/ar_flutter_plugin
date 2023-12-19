@@ -686,6 +686,10 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
                     return nil
                 }
             }
+            if (nodeHitResults.count != 0 && pinchNode != nil) {
+                self.objectManagerChannel.invokeMethod("onPinchStart", arguments: pinchNode!.name) // Chaining of Array and Set is used to remove duplicates
+                return
+            }
         }
         
         if gesture.state == .changed {
@@ -696,13 +700,15 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
                 }
                 let newScale = SCNVector3(nowScale.x + scale - pinchBeginScale! , nowScale.y - pinchBeginScale! + scale, nowScale.z - pinchBeginScale! + scale)
                 pinchBeginScale = scale
-                pinchNode?.parent?.scale = newScale
+                pinchNode!.parent?.scale = newScale
+                self.objectManagerChannel.invokeMethod("onPinchChange", arguments: pinchNode!.name)
             }
         }
         
         if gesture.state == .ended {
-            pinchNode = nil
             pinchBeginScale = nil
+            self.objectManagerChannel.invokeMethod("onPinchEnd", arguments: serializeLocalTransformation(node: pinchNode))
+            pinchNode = nil
         }
     }
     
