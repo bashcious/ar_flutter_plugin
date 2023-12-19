@@ -25,11 +25,15 @@ class ArModelBuilder: NSObject {
                 opacity = 1.0
             } else {
                 // Use standard planes
-                opacity = 0.3
+              opacity = 1.0
+                material.diffuse.contents = UIColor(red: 148/255, green: 57/255, blue: 194/255, alpha: 0.6) // 设置平面的颜色为 rgba(148, 57, 194, 0.60)
+                plane.materials = [material]
             }
         } else {
             // Use standard planes
-            opacity = 0.3
+          opacity = 1.0
+            material.diffuse.contents = UIColor(red: 148/255, green: 57/255, blue: 194/255, alpha: 0.6) // 设置平面的颜色为 rgba(148, 57, 194, 0.60)
+            plane.materials = [material]
         }
         
         let planeNode = SCNNode(geometry: plane)
