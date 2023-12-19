@@ -131,6 +131,15 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
                     }).store(in: &self.cancellableCollection)
                 break
             case "addNodeToPlaneAnchor":
+                let lightNode = SCNNode()
+                let light = SCNLight()
+                light.intensity = 50
+                light.type = .omni
+                light.color = UIColor.white
+                // 设置其他光源属性
+                lightNode.light = light
+                lightNode.position = SCNVector3(x: 0, y: 5, z: 0) // 示例位置
+                sceneView.scene.rootNode.addChildNode(lightNode)
                 if let dict_node = arguments!["node"] as? Dictionary<String, Any>, let dict_anchor = arguments!["anchor"] as? Dictionary<String, Any> {
                     addNode(dict_node: dict_node, dict_anchor: dict_anchor).sink(receiveCompletion: {completion in }, receiveValue: { val in
                            result(val)
@@ -309,9 +318,11 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
         }
         
         if let configHandlePinch = arguments["handlePinch"] as? Bool {
-            let pinchGestureRecognizer = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
-            pinchGestureRecognizer.delegate = self
-            self.sceneView.gestureRecognizers?.append(pinchGestureRecognizer)
+            if (configHandlePinch) {
+                let pinchGestureRecognizer = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
+                pinchGestureRecognizer.delegate = self
+                self.sceneView.gestureRecognizers?.append(pinchGestureRecognizer)
+            }
         }
         
         if let configHandleRotation = arguments["handleRotation"] as? Bool {
