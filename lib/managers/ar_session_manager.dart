@@ -195,4 +195,10 @@ class ARSessionManager {
     final result = await _channel.invokeMethod<Uint8List>('snapshot');
     return MemoryImage(result!);
   }
+
+  /// Returns a future Uint8List that contains a screenshot of the current AR Scene
+  Future<Uint8List?> snapshotWithUint8List() async {
+    final result = await _channel.invokeMethod<Uint8List>('snapshot');
+    return result;
+  }
 }
