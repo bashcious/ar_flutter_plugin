@@ -624,14 +624,14 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
             panCurrentTranslation = recognizer.translation(in: sceneView)
 
             if let panLoc = panCurrentLocation, let panNode = panningNode {
-                if let query = sceneView.raycastQuery(from: panLoc, allowing: .estimatedPlane, alignment: .any) {
+                if let query = sceneView.raycastQuery(from: panLoc, allowing: .existingPlaneInfinite, alignment: .any) {
                     guard let result = self.sceneView.session.raycast(query).first else {
                         return
                     }
-                    let posX = result.worldTransform.columns.3.x
-                    let posY = result.worldTransform.columns.3.y
-                    let posZ = result.worldTransform.columns.3.z
-                    panNode.worldPosition = SCNVector3(posX, posY, posZ)
+                    let posX = result.worldTransform.columns.3.x - panNode.position.x
+                    let posY = result.worldTransform.columns.3.y - panNode.position.y
+                    let posZ = result.worldTransform.columns.3.z - panNode.position.z
+                    panNode.parent?.worldPosition = SCNVector3(posX, posY, posZ)
                 }
                 self.objectManagerChannel.invokeMethod("onPanChange", arguments: panNode.name)
             }
