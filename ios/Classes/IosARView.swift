@@ -678,10 +678,17 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
         let scale = Float(gesture.scale)
         
         if gesture.state == .began {
+            // find current screen nodes
+//            let screenCenterPoint = CGPoint(x: sceneView.bounds.midX, y: sceneView.bounds.midY)
+//            let hitTestResults = sceneView.hitTest(screenCenterPoint, options: nil)
+//
+//            for result in hitTestResults {
+//                let node = result.node
+//                print("Found node: \(node.name ?? "")")
+//            }
             pinchBeginScale = scale
             let touchPoint = gesture.location(in: sceneView)
-            let allHitResults = sceneView.hitTest(touchPoint, options: [SCNHitTestOption.searchMode : SCNHitTestSearchMode.closest.rawValue])
-            // Because 3D model loading can lead to composed nodes, we have to traverse through a node's parent until the parent node with the name assigned by the Flutter API is found
+            let allHitResults = sceneView.hitTest(touchPoint, options: [SCNHitTestOption.searchMode : SCNHitTestSearchMode.closest.rawValue, SCNHitTestOption.boundingBoxOnly: true])
             let nodeHitResults: Array<String> = allHitResults.compactMap {
                 if let nearestNode = nearestParentWithNameStart(node: $0.node, characters: "[#") {
                     pinchNode = nearestNode
