@@ -696,7 +696,7 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
             if pinchNode != nil {
                 let nowScale = pinchNode?.parent?.scale ?? SCNVector3(0, 0, 0)
                 if pinchBeginScale == nil {
-                    pinchBeginScale = 0
+                    pinchBeginScale = scale
                 }
                 let newScale = SCNVector3(nowScale.x + scale - pinchBeginScale! , nowScale.y - pinchBeginScale! + scale, nowScale.z - pinchBeginScale! + scale)
                 pinchBeginScale = scale
