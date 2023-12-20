@@ -155,6 +155,8 @@ class ARSessionManager {
     bool handlePans = false, // nodes are not draggable by default
     bool handlePinch = false, // nodes are not scale by default
     bool handleRotation = false, // nodes can not be rotated by default
+    double minScale = 0.5, // The minimum scaling value for node pinching
+    double maxScale = 4.0, // The maximum scaling value of node pinching
   }) {
     _channel.invokeMethod<void>('init', {
       'showAnimatedGuide': showAnimatedGuide,
@@ -167,6 +169,8 @@ class ARSessionManager {
       'handlePans': handlePans,
       'handlePinch': handlePinch,
       'handleRotation': handleRotation,
+      'minScale': minScale,
+      'maxScale': maxScale,
     });
   }
 

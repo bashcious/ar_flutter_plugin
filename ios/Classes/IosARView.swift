@@ -37,6 +37,8 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
     
     private var pinchNode: SCNNode?
     private var pinchBeginScale: Float?
+    private var pinchMinScale: Float = 0.5
+    private var pinchMaxScale: Float = 4.0
 
     init(
         frame: CGRect,
@@ -319,6 +321,8 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
         
         if let configHandlePinch = arguments["handlePinch"] as? Bool {
             if (configHandlePinch) {
+                pinchMinScale = Float((arguments["minScale"] as? Double) ?? 0.5)
+                pinchMaxScale = Float((arguments["maxScale"] as? Double) ?? 4.0)
                 let pinchGestureRecognizer = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
                 pinchGestureRecognizer.delegate = self
                 self.sceneView.gestureRecognizers?.append(pinchGestureRecognizer)
@@ -698,8 +702,13 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
                 if pinchBeginScale == nil {
                     pinchBeginScale = scale
                 }
-                let newScale = SCNVector3(nowScale.x + scale - pinchBeginScale! , nowScale.y - pinchBeginScale! + scale, nowScale.z - pinchBeginScale! + scale)
+                var newScale = SCNVector3(nowScale.x + scale - pinchBeginScale! , nowScale.y - pinchBeginScale! + scale, nowScale.z - pinchBeginScale! + scale)
                 pinchBeginScale = scale
+                if newScale.x < pinchMinScale {
+                    newScale = SCNVector3(x: pinchMinScale, y: pinchMinScale, z: pinchMinScale)
+                } else if newScale.y > pinchMaxScale {
+                    newScale = SCNVector3(x: pinchMaxScale, y: pinchMaxScale, z: pinchMaxScale)
+                }
                 pinchNode!.parent?.scale = newScale
                 self.objectManagerChannel.invokeMethod("onPinchChange", arguments: pinchNode!.name)
             }
