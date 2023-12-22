@@ -11,6 +11,7 @@ import 'package:vector_math/vector_math_64.dart';
 
 // Type definitions to enforce a consistent use of the API
 typedef ARHitResultHandler = void Function(List<ARHitTestResult> hits);
+typedef ARDetectPlaneHandler = void Function();
 
 /// Manages the session configuration, parameters and events of an [ARView]
 class ARSessionManager {
@@ -29,6 +30,8 @@ class ARSessionManager {
   /// Receives hit results from user taps with tracked planes or feature points
   late ARHitResultHandler onPlaneOrPointTap;
 
+  ARDetectPlaneHandler? onDetectPlane;
+
   ARSessionManager(int id, this.buildContext, this.planeDetectionConfig,
       {this.debug = false}) {
     _channel = MethodChannel('arsession_$id');
@@ -42,7 +45,7 @@ class ARSessionManager {
   Future<Matrix4?> getCameraPose() async {
     try {
       final serializedCameraPose =
-          await _channel.invokeMethod<List<dynamic>>('getCameraPose', {});
+      await _channel.invokeMethod<List<dynamic>>('getCameraPose', {});
       return MatrixConverter().fromJson(serializedCameraPose!);
     } catch (e) {
       print('Error caught: ' + e.toString());
@@ -57,7 +60,7 @@ class ARSessionManager {
         throw Exception("Anchor can not be resolved. Anchor name is empty.");
       }
       final serializedCameraPose =
-          await _channel.invokeMethod<List<dynamic>>('getAnchorPose', {
+      await _channel.invokeMethod<List<dynamic>>('getAnchorPose', {
         "anchorId": anchor.name,
       });
       return MatrixConverter().fromJson(serializedCameraPose!);
@@ -128,6 +131,12 @@ class ARSessionManager {
             onPlaneOrPointTap(hitTestResults);
           }
           break;
+        case 'onDetectPlane':
+          if (onDetectPlane != null) {
+            final result = call.arguments as List<dynamic>;
+            onDetectPlane!();
+          }
+          break;
         case 'dispose':
           _channel.invokeMethod<void>("dispose");
           break;
@@ -181,7 +190,7 @@ class ARSessionManager {
         action: SnackBarAction(
             label: 'HIDE',
             onPressed:
-                ScaffoldMessenger.of(buildContext).hideCurrentSnackBar)));
+            ScaffoldMessenger.of(buildContext).hideCurrentSnackBar)));
   }
 
   /// Dispose the AR view on the platforms to pause the scenes and disconnect the platform handlers.
@@ -204,5 +213,9 @@ class ARSessionManager {
   Future<Uint8List?> snapshotWithUint8List() async {
     final result = await _channel.invokeMethod<Uint8List>('snapshot');
     return result;
+  }
+
+  Future<void> removeAnimatedGuide() async {
+    await _channel.invokeMethod<Uint8List>('removeAnimatedGuide');
   }
 }
