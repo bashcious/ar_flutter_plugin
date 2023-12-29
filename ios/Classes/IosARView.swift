@@ -215,18 +215,18 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
         self.configuration.environmentTexturing = .automatic
         if let planeDetectionConfig = arguments["planeDetectionConfig"] as? Int {
             switch planeDetectionConfig {
-            case 1: 
+            case 1:
                 configuration.planeDetection = .horizontal
                 
-            case 2: 
+            case 2:
                 if #available(iOS 11.3, *) {
                     configuration.planeDetection = .vertical
                 }
-            case 3: 
+            case 3:
                 if #available(iOS 11.3, *) {
                     configuration.planeDetection = [.horizontal, .vertical]
                 }
-            default: 
+            default:
                 configuration.planeDetection = []
             }
         }
@@ -383,7 +383,25 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
                         case 0: //PlaneAnchor
                             if let anchor = self.anchorCollection[anchorName]{
                                 // Attach node to the top-level node of the specified anchor
-                                self.sceneView.node(for: anchor)?.addChildNode(node)
+                                let parentName = dict_node["parentName"] as? String
+                                if parentName != nil {
+                                    let childrenNodes = self.sceneView.node(for: anchor)?.childNodes;
+                                    if childrenNodes != nil {
+                                        var parentNode: SCNNode?
+                                        for childrenNode in childrenNodes! {
+                                            if childrenNode.name == parentName {
+                                                parentNode = childrenNode
+                                                break
+                                            }
+                                        }
+                                        if parentNode == nil {
+                                            parentNode = SCNNode()
+                                            parentNode?.name = parentName
+                                        }
+                                        parentNode?.addChildNode(node)
+                                        self.sceneView.node(for: anchor)?.addChildNode(parentNode!)
+                                    }
+                                }
                                 promise(.success(true))
                             } else {
                                 promise(.success(false))
@@ -643,14 +661,6 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
         let scale = Float(gesture.scale)
         
         if gesture.state == .began {
-            // find current screen nodes
-            //            let screenCenterPoint = CGPoint(x: sceneView.bounds.midX, y: sceneView.bounds.midY)
-            //            let hitTestResults = sceneView.hitTest(screenCenterPoint, options: nil)
-            //
-            //            for result in hitTestResults {
-            //                let node = result.node
-            //                print("Found node: \(node.name ?? "")")
-            //            }
             pinchBeginScale = scale
             let touchPoint = gesture.location(in: sceneView)
             let allHitResults = sceneView.hitTest(touchPoint, options: [SCNHitTestOption.searchMode : SCNHitTestSearchMode.closest.rawValue, SCNHitTestOption.boundingBoxOnly: true])
@@ -766,7 +776,7 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
     }
     
     func addPlaneAnchor(transform: Array<NSNumber>, name: String){
-        let arAnchor = ARAnchor(transform: simd_float4x4(deserializeMatrix4(transform)))
+        let arAnchor = ARAnchor(name: name, transform: simd_float4x4(deserializeMatrix4(transform)))
         anchorCollection[name] = arAnchor
         sceneView.session.add(anchor: arAnchor)
         // Ensure root node is added to anchor before any other function can run (if this isn't done, addNode could fail because anchor does not have a root node yet).
