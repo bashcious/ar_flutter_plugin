@@ -180,4 +180,15 @@ class ARObjectManager {
   togglePlaneRenderer() {
     _channel.invokeMethod('togglePlaneRenderer');
   }
+
+  /// change node color
+  changeNodeColor({required Color color, required String parentName}) {
+    _channel.invokeMethod('changeNodeColor', {
+      'r': color.red/255,
+      'g': color.green/255,
+      'b': color.blue/255,
+      'a': color.alpha/255,
+      'parentName': parentName,
+    });
+  }
 }

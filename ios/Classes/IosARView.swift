@@ -167,6 +167,33 @@ class IosARView: NSObject, FlutterPlatformView, ARSCNViewDelegate, UIGestureReco
                 plane.1.removeFromParentNode()
             }
             break
+        case "changeNodeColor":
+            let r = CGFloat((arguments!["r"] as? Double) ?? 1)
+            let g = CGFloat((arguments!["g"] as? Double) ?? 1)
+            let b = CGFloat((arguments!["b"] as? Double) ?? 1)
+            let a = CGFloat((arguments!["a"] as? Double) ?? 1)
+            let parentName = arguments!["parentName"] as? String
+            if parentName == nil {
+                return
+            }
+            
+            var selectNode: SCNNode?;
+            for anchor in self.anchorCollection.values {
+                let nodes = self.sceneView.node(for: anchor)?.childNodes
+                if nodes != nil {
+                    for node in nodes! {
+                        if node.name == parentName {
+                            selectNode = node
+                            break
+                        }
+                    }
+                }
+            }
+            if selectNode != nil {
+                for n in selectNode!.childNodes {
+                    n.childNodes.first?.geometry?.firstMaterial?.diffuse.contents = UIColor(red: r, green: g, blue: b, alpha: a)
+                }
+            }
         default:
             result(FlutterMethodNotImplemented)
             break
