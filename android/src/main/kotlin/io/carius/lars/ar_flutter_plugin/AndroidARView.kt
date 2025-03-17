@@ -433,9 +433,8 @@ internal class AndroidARView(
 
     fun onPause() {
         // hide instructions view if no longer required
-        if (showAnimatedGuide){
-            val view = activity.findViewById(R.id.content) as ViewGroup
-            view.removeView(animatedGuide)
+        if (showAnimatedGuide) {
+            (activity.findViewById(R.id.content) as? ViewGroup)?.removeView(animatedGuide)
             showAnimatedGuide = false
         }
         arSceneView.pause()
@@ -489,9 +488,11 @@ internal class AndroidARView(
         // Configure Plane scanning guide
         if (argShowAnimatedGuide == true) { // explicit comparison necessary because of nullable type
             showAnimatedGuide = true
-            val view = activity.findViewById(R.id.content) as ViewGroup
-            animatedGuide = activity.layoutInflater.inflate(com.google.ar.sceneform.ux.R.layout.sceneform_plane_discovery_layout, null)
-            view.addView(animatedGuide)
+            val view = activity.findViewById(R.id.content) as? ViewGroup
+            if (view != null) {
+                animatedGuide = activity.layoutInflater.inflate(com.google.ar.sceneform.ux.R.layout.sceneform_plane_discovery_layout, null)
+                view.addView(animatedGuide)
+            }
         }
 
         // Configure feature points
@@ -530,7 +531,7 @@ internal class AndroidARView(
         arSceneView.session?.configure(config)
 
         // Configure whether or not detected planes should be shown
-        arSceneView.planeRenderer.isVisible = if (argShowPlanes == true) true else false
+        arSceneView.planeRenderer.isVisible = argShowPlanes == true
         // Create custom plane renderer (use supplied texture & increase radius)
         argCustomPlaneTexturePath?.let {
             val loader: FlutterLoader = FlutterInjector.instance().flutterLoader()
@@ -576,18 +577,10 @@ internal class AndroidARView(
         }
 
         // Configure gestures
-        if (argHandleRotation ==
-                true) { // explicit comparison necessary because of nullable type
-            enableRotation = true
-        } else {
-            enableRotation = false
-        }
-        if (argHandlePans ==
-                true) { // explicit comparison necessary because of nullable type
-            enablePans = true
-        } else {
-            enablePans = false
-        }
+        enableRotation = argHandleRotation ==
+                true
+        enablePans = argHandlePans ==
+                true
 
         result.success(null)
     }
@@ -597,8 +590,8 @@ internal class AndroidARView(
         if (showAnimatedGuide && arSceneView.arFrame != null){
             for (plane in arSceneView.arFrame!!.getUpdatedTrackables(Plane::class.java)) {
                 if (plane.trackingState === TrackingState.TRACKING) {
-                    val view = activity.findViewById(R.id.content) as ViewGroup
-                    view.removeView(animatedGuide)
+                    val view = activity.findViewById(R.id.content) as? ViewGroup
+                    view?.removeView(animatedGuide)
                     showAnimatedGuide = false
                     break
                 }
