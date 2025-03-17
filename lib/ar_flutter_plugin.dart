@@ -15,4 +15,9 @@ class ArFlutterPlugin {
     final String version = await _channel.invokeMethod('getPlatformVersion');
     return version;
   }
+
+  static Future<bool> isSupport() async {
+    final bool isSupport = await _channel.invokeMethod('isSupport');
+    return isSupport;
+  }
 }
