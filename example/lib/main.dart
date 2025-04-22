@@ -68,9 +68,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<bool> requestPermission() async {
     if (Platform.isAndroid) return true;
-    List<Permission> permissions = [
-      Permission.camera
-    ];
+    List<Permission> permissions = [Permission.camera];
     var res = await permissions.request();
     for (var permission in res.keys) {
       if (res[permission] == PermissionStatus.denied) {

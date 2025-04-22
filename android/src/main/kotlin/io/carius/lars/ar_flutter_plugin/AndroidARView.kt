@@ -33,6 +33,7 @@ import java.io.IOException
 import java.nio.FloatBuffer
 import java.util.concurrent.CompletableFuture
 
+import android.R
 import com.google.ar.sceneform.rendering.*
 
 import android.view.ViewGroup
